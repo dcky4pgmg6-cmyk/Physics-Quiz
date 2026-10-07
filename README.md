@@ -37,6 +37,25 @@
             font-size: 16px;
             margin: 0;
         }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        .input-group label {
+            display: block;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
         .progress-bar {
             text-align: left;
             font-size: 14px;
@@ -72,7 +91,7 @@
         .options button:hover {
             background-color: #e2e8f0;
         }
-        .btn-next {
+        .btn-action {
             display: block;
             width: 100%;
             padding: 12px;
@@ -85,7 +104,7 @@
             cursor: pointer;
             margin-top: 20px;
         }
-        .btn-next:hover {
+        .btn-action:hover {
             background-color: #059669;
         }
         .result {
@@ -93,6 +112,33 @@
             font-size: 20px;
             font-weight: bold;
             color: #1e3a8a;
+            line-height: 1.8;
+        }
+        .results-board {
+            margin-top: 30px;
+            border-top: 2px dashed #d1d5db;
+            padding-top: 20px;
+        }
+        .results-board h3 {
+            color: #1e3a8a;
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .results-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .results-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 15px;
         }
     </style>
 </head>
@@ -104,14 +150,32 @@
         <h2>إعداد أ. خديجة عسيري</h2>
     </div>
 
-    <div id="quiz-body">
+    <!-- شاشة إدخال اسم الطالبة -->
+    <div id="start-screen">
+        <div class="input-group">
+            <label for="student-name">الرجاء إدخال اسم الطالبة للبدء:</label>
+            <input type="text" id="student-name" placeholder="اكتبي اسمك الثلاثي هنا...">
+        </div>
+        <button class="btn-action" onclick="startQuiz()">بدء الاختبار</button>
+    </div>
+
+    <!-- شاشة الأسئلة -->
+    <div id="quiz-body" style="display:none;">
         <div class="progress-bar" id="progress-text">سؤال 1 من 23</div>
         <div class="question" id="question-text">جاري تحميل السؤال...</div>
         <ul class="options" id="options-container"></ul>
-        <button class="btn-next" id="next-btn" onclick="nextQuestion()" style="display:none;">السؤال التالي</button>
+        <button class="btn-action" id="next-btn" onclick="nextQuestion()" style="display:none;">السؤال التالي</button>
     </div>
 
+    <!-- شاشة النتيجة -->
     <div id="result-container" class="result" style="display:none;"></div>
+
+    <!-- لوحة نتائج الطالبات -->
+    <div class="results-board" id="results-board" style="display:none;">
+        <h3>سجل نتائج الطالبات</h3>
+        <ul class="results-list" id="students-list"></ul>
+        <button class="btn-action" onclick="resetQuiz()" style="background-color: #3b82f6; margin-top: 15px;">طالبة جديدة / إعادة الاختبار</button>
+    </div>
 </div>
 
 <script>
@@ -143,6 +207,20 @@
 
     let currentQuestion = 0;
     let score = 0;
+    let studentName = "";
+    let studentsResults = [];
+
+    function startQuiz() {
+        const nameInput = document.getElementById("student-name").value.trim();
+        if (nameInput === "") {
+            alert("يرجى كتابة اسمك قبل البدء بالاختبار!");
+            return;
+        }
+        studentName = nameInput;
+        document.getElementById("start-screen").style.display = "none";
+        document.getElementById("quiz-body").style.display = "block";
+        loadQuestion();
+    }
 
     function loadQuestion() {
         const q = quizData[currentQuestion];
@@ -198,13 +276,36 @@
         const resultContainer = document.getElementById("result-container");
         resultContainer.style.display = "block";
         resultContainer.innerHTML = `
-            🎉 اكتمل الاختبار!<br><br>
-            درجتك هي: ${score} من ${quizData.length}<br><br>
-            <small style="font-weight:normal; font-size:14px; color:#6b7280;">إعداد المعلمة: خديجة عسيري</small>
+            🎉 مبروك إتمام الاختبار يا <strong>${studentName}</strong>!<br>
+            درجتك هي: <strong>${score} من ${quizData.length}</strong>
         `;
+
+        studentsResults.push({ name: studentName, score: score });
+        updateResultsBoard();
     }
 
-    loadQuestion();
+    function updateResultsBoard() {
+        const board = document.getElementById("results-board");
+        const list = document.getElementById("students-list");
+        board.style.display = "block";
+        list.innerHTML = "";
+
+        studentsResults.forEach(student => {
+            const li = document.createElement("li");
+            li.innerHTML = `<span>👤 ${student.name}</span> <span><strong>${student.score}</strong> / ${quizData.length}</span>`;
+            list.appendChild(li);
+        });
+    }
+
+    function resetQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        studentName = "";
+        document.getElementById("student-name").value = "";
+        document.getElementById("result-container").style.display = "none";
+        document.getElementById("results-board").style.display = "none";
+        document.getElementById("start-screen").style.display = "block";
+    }
 </script>
 
 </body>
